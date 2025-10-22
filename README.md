@@ -316,28 +316,4 @@ pnpm typecheck
 pnpm lint
 ```
 
-## 🤝 Contributing
 
-This is a challenge submission project. For questions or suggestions, please reach out.
-
-## 📄 License
-
-MIT License - See LICENSE file for details
-
-## 👨‍💻 Author
-
-**Your Name**
-- GitHub: [@yourusername]
-- LinkedIn: [Your LinkedIn]
-- Email: your.email@example.com
-
-## 🙏 Acknowledgments
-
-- GenAI Labs for the challenge opportunity
-- OpenAI for the API
-- Next.js team for the amazing framework
-- Radix UI for accessible components
-
----
-
-Built with ❤️ for the GenAI Labs Challenge 2025
