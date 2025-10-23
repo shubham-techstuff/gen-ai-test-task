@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     };
 
-    saveExperiment(experiment);
+    await saveExperiment(experiment);
 
     return NextResponse.json({
       experimentId: experiment.id,
