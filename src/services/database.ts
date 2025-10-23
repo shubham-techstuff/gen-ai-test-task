@@ -4,15 +4,23 @@ import fs from "fs";
 import { Experiment, LLMResponse, ExperimentRow, ResponseRow, ExperimentSummary } from "@/types";
 
 // Determine database path based on environment
-// Vercel uses read-only filesystem, so use /tmp (ephemeral storage)
-const isVercel = !!process.env.VERCEL;
-const DB_DIR = isVercel ? "/tmp" : path.join(process.cwd(), "data");
+// Vercel and other serverless platforms use read-only filesystem, so use /tmp (ephemeral storage)
+const isServerless = !!(
+  process.env.VERCEL || 
+  process.env.VERCEL_ENV || 
+  process.env.AWS_LAMBDA_FUNCTION_NAME || 
+  process.env.NETLIFY ||
+  process.env.RAILWAY_ENVIRONMENT
+);
+
+const DB_DIR = isServerless ? "/tmp" : path.join(process.cwd(), "data");
 const DB_PATH = path.join(DB_DIR, "experiments.db");
 
 // Log database location on startup
-if (isVercel) {
-  console.log("💾 Database: Running on Vercel, using ephemeral /tmp storage");
+if (isServerless) {
+  console.log("💾 Database: Running on serverless platform, using ephemeral /tmp storage");
   console.log("⚠️  Note: Data will be cleared between deployments and function cold starts");
+  console.log(`📍 Environment detected: ${process.env.VERCEL ? 'Vercel' : process.env.AWS_LAMBDA_FUNCTION_NAME ? 'AWS Lambda' : process.env.NETLIFY ? 'Netlify' : 'Railway'}`);
 } else {
   console.log(`💾 Database: Using persistent local storage at ${DB_PATH}`);
 }
