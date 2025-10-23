@@ -6,8 +6,8 @@
 
 This application was built as part of the GenAI Labs Challenge 2025. It allows users to generate multiple LLM responses using different temperature and top_p parameters, then compare them using five custom-designed quality metrics.
 
-**Live Demo:** [Coming Soon]  
-**Demo Video:** [Coming Soon]
+**Live Demo:** https://gen-ai-test-task-na3k.vercel.app/ 
+**Demo Video:** https://www.loom.com/share/da8fb337a8a849969c5dda950f2b8b93
 
 ## ✨ Features
 
