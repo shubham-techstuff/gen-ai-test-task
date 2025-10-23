@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const experiment = getExperiment(id);
+    const experiment = await getExperiment(id);
 
     if (!experiment) {
       return NextResponse.json(

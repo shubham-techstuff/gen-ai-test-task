@@ -18,6 +18,8 @@ function getPool(): Pool {
     throw new Error("DATABASE_URL environment variable is not set");
   }
 
+  console.log("💾 Database: Connecting to PostgreSQL (Supabase Transaction Pooler)");
+
   pool = new Pool({
     connectionString,
     ssl: {
@@ -30,40 +32,17 @@ function getPool(): Pool {
   });
 
   // Test connection and initialize schema
-  testConnection();
+  initializeDatabase();
 
   return pool;
 }
 
 /**
- * Test database connection
- */
-async function testConnection() {
-  if (!pool) return;
-
-  try {
-    const client = await pool.connect();
-    
-    try {
-      // Test query
-      await client.query("SELECT NOW()");
-      console.log("✅ Connected to PostgreSQL database (Supabase Transaction Pooler)");
-      
-      // Initialize schema
-      await initializeSchema(client);
-    } finally {
-      client.release();
-    }
-  } catch (error: any) {
-    console.error("❌ Failed to connect to database:", error.message);
-    throw error;
-  }
-}
-
-/**
  * Initialize database schema
  */
-async function initializeSchema(client: any) {
+async function initializeDatabase() {
+  const client = await getPool().connect();
+  
   try {
     console.log("🔨 Initializing database schema...");
 
@@ -112,8 +91,10 @@ async function initializeSchema(client: any) {
 
     console.log("✅ Database schema initialized successfully");
   } catch (error: any) {
-    console.error("❌ Error initializing database schema:", error.message);
+    console.error("❌ Error initializing database:", error.message);
     throw error;
+  } finally {
+    client.release();
   }
 }
 

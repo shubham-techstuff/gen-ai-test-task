@@ -16,7 +16,7 @@ This application was built as part of the GenAI Labs Challenge 2025. It allows u
 - 🤖 **LLM Integration**: OpenAI API integration with automatic mock fallback
 - 📊 **Quality Metrics**: 5 comprehensive metrics analyzing response characteristics
 - 📈 **Data Visualization**: Interactive radar and bar charts for comparison
-- 💾 **Data Persistence**: SQLite database for experiment storage
+- 💾 **Data Persistence**: PostgreSQL database (Supabase) for reliable storage
 - 📤 **Export Options**: Export experiments as JSON or CSV
 
 ### Quality Metrics
@@ -38,6 +38,7 @@ This application was built as part of the GenAI Labs Challenge 2025. It allows u
 ### Prerequisites
 - Node.js 18+ 
 - pnpm (or npm/yarn)
+- PostgreSQL database URL (Supabase recommended)
 - OpenAI API key (optional - uses mock mode without it)
 
 ### Installation
@@ -55,11 +56,25 @@ pnpm install
 
 3. Create environment file:
 ```bash
-# Create .env.local file
-echo "OPENAI_API_KEY=your_api_key_here" > .env.local
+# Create .env.local file with your credentials
+cat > .env.local << EOF
+# PostgreSQL Database URL (Required)
+DATABASE_URL=postgresql://user:password@host:port/database
+
+# OpenAI API Key (Optional - leave empty for mock mode)
+OPENAI_API_KEY=your_api_key_here
+EOF
 ```
 
-> **Note:** Leave `OPENAI_API_KEY` empty or undefined to use mock mode for testing without API costs.
+> **📝 Important Notes:**
+> - **`DATABASE_URL`** is **required** for data persistence. Get a free PostgreSQL database from [Supabase](https://supabase.com/)
+> - **`OPENAI_API_KEY`** is **optional**. Leave it empty to use mock mode for testing without API costs.
+
+**Example with Supabase:**
+```env
+DATABASE_URL=postgresql://postgres.xxxxx:password@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+OPENAI_API_KEY=sk-your-openai-api-key-here
+```
 
 4. Run development server:
 ```bash
@@ -67,6 +82,25 @@ pnpm dev
 ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+You should see the connection message in the console:
+```
+✅ Connected to PostgreSQL database (Supabase Transaction Pooler)
+🔨 Initializing database schema...
+✅ Database schema initialized successfully
+```
+
+### Database Setup (Supabase)
+
+If you don't have a PostgreSQL database yet:
+
+1. Go to [Supabase](https://supabase.com/) and create a free account
+2. Create a new project
+3. Go to **Settings** → **Database** → **Connection Pooling**
+4. Copy the **Transaction** connection string (port `6543`)
+5. Add it to your `.env.local` as `DATABASE_URL`
+
+The application will automatically create the required tables on first run.
 
 ### Building for Production
 
@@ -90,7 +124,7 @@ pnpm start
 
 **Backend:**
 - Next.js API Routes
-- SQLite (better-sqlite3)
+- PostgreSQL with `pg` (Supabase Transaction Pooler)
 - OpenAI API
 - Zod (validation)
 
@@ -114,7 +148,7 @@ src/
 │   ├── ui/               # Reusable UI components
 │   └── providers.tsx     # React Query provider
 ├── services/              # Business logic
-│   ├── database.ts       # SQLite operations
+│   ├── database.ts       # PostgreSQL operations
 │   ├── llm.ts           # LLM service
 │   └── metrics.ts       # Quality metrics algorithms
 ├── types/                 # TypeScript types
@@ -275,16 +309,17 @@ The application can be deployed to any platform supporting Next.js:
 
 **Note:** Ensure the platform supports:
 - Node.js 18+
-- File system access (for SQLite)
-- Persistent storage volume (for database)
+- Environment variables for `DATABASE_URL`
+- PostgreSQL connection (Supabase recommended)
 
 ## 🎓 Design Decisions
 
-### Why SQLite?
-- Simple setup, no external database required
-- File-based storage suitable for MVP
-- Easy to migrate to PostgreSQL/MySQL later
-- Perfect for Vercel deployment with persistent storage
+### Why PostgreSQL (Supabase)?
+- Production-ready database with full ACID compliance
+- Reliable data persistence across all deployments
+- Excellent scalability for growing user base
+- Free tier available with generous limits
+- Transaction pooler perfect for serverless (Vercel)
 
 ### Why Mock Mode?
 - Enables testing without API costs

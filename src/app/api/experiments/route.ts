@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     if (id) {
       // Get specific experiment
-      const experiment = getExperiment(id);
+      const experiment = await getExperiment(id);
 
       if (!experiment) {
         return NextResponse.json(
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all experiments (summary)
-    const experiments = getAllExperiments();
+    const experiments = await getAllExperiments();
     return NextResponse.json({ experiments });
   } catch (error: any) {
     console.error("API Error:", error);
@@ -63,14 +63,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const success = updateExperiment(id, { name, description });
-
-    if (!success) {
-      return NextResponse.json(
-        { error: "Experiment not found" },
-        { status: 404 }
-      );
-    }
+    await updateExperiment(id, { name, description });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -98,14 +91,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const success = deleteExperiment(id);
-
-    if (!success) {
-      return NextResponse.json(
-        { error: "Experiment not found" },
-        { status: 404 }
-      );
-    }
+    await deleteExperiment(id);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
