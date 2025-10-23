@@ -4,7 +4,7 @@ import fs from "fs";
 import { Experiment, LLMResponse, ExperimentRow, ResponseRow, ExperimentSummary } from "@/types";
 
 // Determine database path based on environment
-// Vercel and other serverless platforms use read-only filesystem, so use /tmp (ephemeral storage)
+// Vercel and other serverless platforms use read-only filesystem
 const isServerless = !!(
   process.env.VERCEL || 
   process.env.VERCEL_ENV || 
@@ -13,13 +13,16 @@ const isServerless = !!(
   process.env.RAILWAY_ENVIRONMENT
 );
 
-const DB_DIR = isServerless ? "/tmp" : path.join(process.cwd(), "data");
-const DB_PATH = path.join(DB_DIR, "experiments.db");
+// For serverless, use in-memory database to ensure data consistency within deployment
+// For local, use file-based storage for persistence
+const DB_DIR = path.join(process.cwd(), "data");
+const DB_PATH = isServerless ? ":memory:" : path.join(DB_DIR, "experiments.db");
 
 // Log database location on startup
 if (isServerless) {
-  console.log("💾 Database: Running on serverless platform, using ephemeral /tmp storage");
-  console.log("⚠️  Note: Data will be cleared between deployments and function cold starts");
+  console.log("💾 Database: Running on serverless platform, using IN-MEMORY storage");
+  console.log("⚠️  Note: Data persists only during function lifetime (typically 5-15 minutes)");
+  console.log("ℹ️  This ensures data consistency across API routes in the same deployment");
   console.log(`📍 Environment detected: ${process.env.VERCEL ? 'Vercel' : process.env.AWS_LAMBDA_FUNCTION_NAME ? 'AWS Lambda' : process.env.NETLIFY ? 'Netlify' : 'Railway'}`);
 } else {
   console.log(`💾 Database: Using persistent local storage at ${DB_PATH}`);
@@ -29,17 +32,27 @@ let db: Database.Database | null = null;
 
 /**
  * Get or create database instance
+ * Uses singleton pattern to ensure the same in-memory DB is shared across all API routes
  */
 function getDB(): Database.Database {
-  if (db) return db;
+  if (db) {
+    console.log("♻️  Reusing existing database connection");
+    return db;
+  }
 
-  // Ensure data directory exists
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
+  if (!isServerless) {
+    // Ensure data directory exists for file-based storage
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    }
   }
 
   db = new Database(DB_PATH);
-  db.pragma("journal_mode = WAL");
+  
+  // Only use WAL mode for file-based databases
+  if (!isServerless) {
+    db.pragma("journal_mode = WAL");
+  }
   
   // Initialize schema
   initializeSchema(db);
