@@ -1,9 +1,21 @@
 import Database from "better-sqlite3";
 import path from "path";
+import fs from "fs";
 import { Experiment, LLMResponse, ExperimentRow, ResponseRow, ExperimentSummary } from "@/types";
 
-// Database path - in production, use a persistent volume
-const DB_PATH = path.join(process.cwd(), "data", "experiments.db");
+// Determine database path based on environment
+// Vercel uses read-only filesystem, so use /tmp (ephemeral storage)
+const isVercel = !!process.env.VERCEL;
+const DB_DIR = isVercel ? "/tmp" : path.join(process.cwd(), "data");
+const DB_PATH = path.join(DB_DIR, "experiments.db");
+
+// Log database location on startup
+if (isVercel) {
+  console.log("💾 Database: Running on Vercel, using ephemeral /tmp storage");
+  console.log("⚠️  Note: Data will be cleared between deployments and function cold starts");
+} else {
+  console.log(`💾 Database: Using persistent local storage at ${DB_PATH}`);
+}
 
 let db: Database.Database | null = null;
 
@@ -14,10 +26,8 @@ function getDB(): Database.Database {
   if (db) return db;
 
   // Ensure data directory exists
-  const fs = require("fs");
-  const dataDir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+  if (!fs.existsSync(DB_DIR)) {
+    fs.mkdirSync(DB_DIR, { recursive: true });
   }
 
   db = new Database(DB_PATH);
@@ -25,6 +35,8 @@ function getDB(): Database.Database {
   
   // Initialize schema
   initializeSchema(db);
+  
+  console.log(`✅ Database initialized at ${DB_PATH}`);
   
   return db;
 }

@@ -4,6 +4,13 @@ import { sleep } from "@/lib/utils";
 
 const USE_MOCK = !process.env.OPENAI_API_KEY;
 
+// Log which mode we're using on startup
+if (USE_MOCK) {
+  console.log("🤖 LLM Service: Running in MOCK MODE (no OpenAI API key detected)");
+} else {
+  console.log("✨ LLM Service: Running in REAL MODE (OpenAI API key detected)");
+}
+
 let openai: OpenAI | null = null;
 
 if (!USE_MOCK && process.env.OPENAI_API_KEY) {
@@ -27,10 +34,12 @@ export async function generateResponse(
   model: string = "gpt-4o-mini"
 ): Promise<LLMGenerateResult> {
   if (USE_MOCK || !openai) {
+    console.log(`🤖 Generating MOCK response (temp: ${parameters.temperature}, top_p: ${parameters.topP})`);
     return generateMockResponse(prompt, parameters);
   }
 
   try {
+    console.log(`✨ Calling OpenAI API (model: ${model}, temp: ${parameters.temperature}, top_p: ${parameters.topP})`);
     const response = await openai.chat.completions.create({
       model: model,
       messages: [
@@ -47,17 +56,18 @@ export async function generateResponse(
     const content = response.choices[0]?.message?.content || "";
     const tokenCount = response.usage?.total_tokens || 0;
 
+    console.log(`✅ OpenAI response received (tokens: ${tokenCount}, model: ${response.model})`);
     return {
       content,
       tokenCount,
       model: response.model,
     };
   } catch (error: any) {
-    console.error("OpenAI API error:", error);
+    console.error("❌ OpenAI API error:", error.message);
     
     // Fallback to mock on error
     if (error.code === "insufficient_quota" || error.code === "rate_limit_exceeded") {
-      console.warn("API quota exceeded, falling back to mock response");
+      console.warn("⚠️ API quota exceeded, falling back to MOCK response");
       return generateMockResponse(prompt, parameters);
     }
     
@@ -77,10 +87,13 @@ async function generateMockResponse(
 
   // Generate response based on temperature
   const responses = generateResponseVariations(prompt, parameters);
+  const tokenCount = Math.floor(responses.split(/\s+/).length * 1.3);
+  
+  console.log(`✅ Mock response generated (tokens: ${tokenCount}, variation: ${parameters.temperature >= 1.0 ? "creative" : parameters.temperature >= 0.5 ? "balanced" : "focused"})`);
   
   return {
     content: responses,
-    tokenCount: Math.floor(responses.split(/\s+/).length * 1.3),
+    tokenCount: tokenCount,
     model: "mock-gpt-4",
   };
 }
