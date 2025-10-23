@@ -6,6 +6,10 @@ import { saveExperiment } from "@/services/database";
 import { generateId } from "@/lib/utils";
 import { Experiment, LLMResponse } from "@/types";
 
+// Configure route to allow longer execution time for LLM API calls
+export const maxDuration = 30; // 30 seconds
+export const dynamic = 'force-dynamic';
+
 const generateRequestSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(5000, "Prompt too long"),
   parameters: z.array(

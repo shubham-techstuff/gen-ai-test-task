@@ -6,6 +6,9 @@ import {
   updateExperiment,
 } from "@/services/database";
 
+// Ensure fresh data on every request
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/experiments
  * Get all experiments (summary view)

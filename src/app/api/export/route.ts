@@ -3,6 +3,9 @@ import { getExperiment } from "@/services/database";
 import Papa from "papaparse";
 import { ExportFormat } from "@/types";
 
+// Ensure fresh data for exports
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/export?id=xxx&format=json|csv
  * Export an experiment in the specified format
