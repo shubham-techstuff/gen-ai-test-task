@@ -44,15 +44,13 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, loading, children, disabled, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+    // When loading or asChild with loading, render as button
+    // Slot requires exactly one React element child
+    const useSlot = asChild && !loading && React.isValidElement(children);
+    const Comp = useSlot ? Slot : "button";
     
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        disabled={loading || disabled}
-        {...props}
-      >
+    const content = (
+      <>
         {loading && (
           <svg
             className="h-4 w-4 animate-spin"
@@ -76,6 +74,22 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           </svg>
         )}
         {children}
+      </>
+    );
+    
+    if (useSlot) {
+      // When using Slot, we need to pass the single child element directly
+      return <Slot {...props} className={cn(buttonVariants({ variant, size, className }))} ref={ref}>{children}</Slot>;
+    }
+    
+    return (
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        disabled={loading || disabled}
+        {...props}
+      >
+        {content}
       </button>
     );
   }
